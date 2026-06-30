@@ -1,0 +1,138 @@
+[
+  {
+    "id": "z1",
+    "name": "Karve Nagar",
+    "lat": 18.4918,
+    "lng": 73.8225,
+    "tempC": 41.5,
+    "feelsLikeC": 44,
+    "heatLevel": "severe",
+    "vulnerability": "High",
+    "vulnerabilityScore": 94,
+    "details": "Elderly: 24% · Outdoor Workers: 35% · Canopy: 6%",
+    "drivers": [
+      { "factor": "Asphalt density: 78%", "weight": 4.1 },
+      { "factor": "Low tree canopy: 6%", "weight": 3.0 },
+      { "factor": "No green buffers", "weight": 1.8 }
+    ]
+  },
+  {
+    "id": "z2",
+    "name": "Aundh",
+    "lat": 18.5584,
+    "lng": 73.8076,
+    "tempC": 39.4,
+    "feelsLikeC": 42,
+    "heatLevel": "high",
+    "vulnerability": "High",
+    "vulnerabilityScore": 82,
+    "details": "Elderly: 15% · Outdoor Workers: 18% · Canopy: 10%",
+    "drivers": [
+      { "factor": "High vehicle exhaust", "weight": 2.1 },
+      { "factor": "Asphalt roads: 65%", "weight": 2.5 },
+      { "factor": "Lack of public parks", "weight": 1.3 }
+    ]
+  },
+  {
+    "id": "z3",
+    "name": "Kothrud",
+    "lat": 18.5074,
+    "lng": 73.8077,
+    "tempC": 38.2,
+    "feelsLikeC": 41,
+    "heatLevel": "high",
+    "vulnerability": "High",
+    "vulnerabilityScore": 88,
+    "details": "Elderly: 18% · Outdoor Workers: 22% · Canopy: 12%",
+    "drivers": [
+      { "factor": "Low albedo roofing", "weight": 3.2 },
+      { "factor": "High concrete density", "weight": 2.8 },
+      { "factor": "Vegetation index: 0.12", "weight": 1.5 }
+    ]
+  },
+  {
+    "id": "z4",
+    "name": "Shivajinagar",
+    "lat": 18.5350,
+    "lng": 73.8250,
+    "tempC": 37.8,
+    "feelsLikeC": 40,
+    "heatLevel": "high",
+    "vulnerability": "High",
+    "vulnerabilityScore": 78,
+    "details": "Elderly: 12% · Outdoor Workers: 28% · Canopy: 8%",
+    "drivers": [
+      { "factor": "Transit hub traffic", "weight": 2.4 },
+      { "factor": "Concrete skyscrapers", "weight": 2.9 },
+      { "factor": "Tree cover: 8%", "weight": 1.8 }
+    ]
+  },
+  {
+    "id": "z5",
+    "name": "Warje",
+    "lat": 18.4857,
+    "lng": 73.7922,
+    "tempC": 36.5,
+    "feelsLikeC": 39,
+    "heatLevel": "moderate",
+    "vulnerability": "Medium",
+    "vulnerabilityScore": 68,
+    "details": "Elderly: 10% · Outdoor Workers: 15% · Canopy: 15%",
+    "drivers": [
+      { "factor": "Low albedo pavement", "weight": 1.9 },
+      { "factor": "River buffer cooling", "weight": -1.2 },
+      { "factor": "Medium building volume", "weight": 1.1 }
+    ]
+  },
+  {
+    "id": "z6",
+    "name": "Baner",
+    "lat": 18.5590,
+    "lng": 73.7868,
+    "tempC": 35.8,
+    "feelsLikeC": 38,
+    "heatLevel": "moderate",
+    "vulnerability": "Medium",
+    "vulnerabilityScore": 54,
+    "details": "Elderly: 8% · Outdoor Workers: 12% · Canopy: 18%",
+    "drivers": [
+      { "factor": "Moderate built density", "weight": 1.8 },
+      { "factor": "Moderate tree cover", "weight": -0.5 },
+      { "factor": "High solar exposure", "weight": 1.2 }
+    ]
+  },
+  {
+    "id": "z7",
+    "name": "Pashan",
+    "lat": 18.5380,
+    "lng": 73.7950,
+    "tempC": 35.1,
+    "feelsLikeC": 37,
+    "heatLevel": "moderate",
+    "vulnerability": "Low",
+    "vulnerabilityScore": 42,
+    "details": "Elderly: 6% · Outdoor Workers: 10% · Canopy: 22%",
+    "drivers": [
+      { "factor": "Lake breeze cooling", "weight": -1.8 },
+      { "factor": "Moderate tree canopy", "weight": -0.8 },
+      { "factor": "Low residential density", "weight": 0.5 }
+    ]
+  },
+  {
+    "id": "z8",
+    "name": "Bavdhan",
+    "lat": 18.5216,
+    "lng": 73.7663,
+    "tempC": 34.2,
+    "feelsLikeC": 36,
+    "heatLevel": "mild",
+    "vulnerability": "Low",
+    "vulnerabilityScore": 30,
+    "details": "Elderly: 4% · Outdoor Workers: 8% · Canopy: 40%",
+    "drivers": [
+      { "factor": "Hilly topography wind", "weight": -2.1 },
+      { "factor": "Good forest canopy: 40%", "weight": -1.5 },
+      { "factor": "Paved surfaces: 22%", "weight": 0.8 }
+    ]
+  }
+]

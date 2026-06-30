@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+/* ── Design Tokens via Tailwind v4 @theme ─────────────────────────── */
+@theme {
+  /* Heat palette (brightened for dark-bg contrast) */
+  --color-heat-cool:      #3B82F6;
+  --color-heat-mild:      #38BDF8;
+  --color-heat-moderate:  #FACC15;
+  --color-heat-high:      #FB923C;
+  --color-heat-severe:    #DC2626;
+
+  /* Action palette */
+  --color-action-teal:    #0D9488;
+
+  /* Budget palette */
+  --color-budget-indigo:  #4F46E5;
+
+  /* Tradeoff palette */
+  --color-tradeoff-amber: #D97706;
+
+  /* Base surface / text / border — dark mode */
+  --color-base-bg:        #020617;   /* slate-950 */
+  --color-base-surface:   #1E293B;   /* slate-800  — card background */
+  --color-base-border:    #334155;   /* slate-700  — borders */
+  --color-base-text:      #CBD5E1;   /* slate-300  — body text */
+  --color-base-headline:  #F8FAFC;   /* white-ish  — headlines */
+
+  /* Font */
+  --font-inter: var(--font-inter);
+}
+
+/* ── Base Reset ───────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  background-color: var(--color-base-bg);
+  color: var(--color-base-text);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Leaflet overrides for dark theme ─────────────────────────────── */
+.leaflet-container {
+  background: #0F172A;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+.leaflet-control-attribution {
+  background: rgba(2, 6, 23, 0.7) !important;
+  color: #64748B !important;
+  font-size: 10px;
+}
+.leaflet-control-attribution a {
+  color: #94A3B8 !important;
+}
+.leaflet-control-zoom a {
+  background-color: #1E293B !important;
+  color: #CBD5E1 !important;
+  border-color: #334155 !important;
+}
+.leaflet-control-zoom a:hover {
+  background-color: #334155 !important;
+}
+.leaflet-popup-content-wrapper {
+  background: #1E293B !important;
+  color: #CBD5E1 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.4) !important;
+}
+.leaflet-popup-tip {
+  background: #1E293B !important;
+}
+.leaflet-popup-content {
+  margin: 8px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
