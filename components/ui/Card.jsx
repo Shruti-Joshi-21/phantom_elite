@@ -7,10 +7,10 @@ export default function Card({ children, className = "", style = {}, ...props })
     <div
       style={{
         borderRadius: "0.75rem",
-        boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.3)",
-        border: "1px solid var(--color-base-border)",   /* slate-700 */
+        boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(255, 255, 255, 0.05), 0 4px 12px rgba(255, 255, 255, 0.02)",
+        border: "none",
         padding: "1rem",
-        backgroundColor: "var(--color-base-surface)",   /* slate-800 */
+        backgroundColor: "rgba(2, 6, 23, 1.0)",   /* deep blackish slate-950 */
         ...style,
       }}
       className={className}

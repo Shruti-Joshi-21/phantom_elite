@@ -1,12 +1,27 @@
+"use client";
+
+import { useState } from "react";
 import PlannerShell from "@/components/PlannerShell";
 import { mockPlannerData } from "@/lib/mockData/planner";
 
-export const metadata = {
-  title: "City Planner Dashboard · UrbanCool",
-  description:
-    "AI-powered decision-support workflow for heat mitigation planning and budget optimization.",
-};
-
 export default function PlannerPage() {
-  return <PlannerShell data={mockPlannerData} />;
+  // State setup
+  const [selectedZoneId, setSelectedZoneId] = useState(null); // null by default
+  const [selectedInterventionIds, setSelectedInterventionIds] = useState([]); // empty array by default
+  const [planConfirmed, setPlanConfirmed] = useState(false); // false by default
+  const [budget, setBudget] = useState(2000000); // Default ₹20 Lakhs
+
+  return (
+    <PlannerShell
+      data={mockPlannerData}
+      selectedZoneId={selectedZoneId}
+      setSelectedZoneId={setSelectedZoneId}
+      selectedInterventionIds={selectedInterventionIds}
+      setSelectedInterventionIds={setSelectedInterventionIds}
+      planConfirmed={planConfirmed}
+      setPlanConfirmed={setPlanConfirmed}
+      budget={budget}
+      setBudget={setBudget}
+    />
+  );
 }

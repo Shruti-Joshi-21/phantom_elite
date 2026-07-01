@@ -126,108 +126,79 @@ export default function MapPanel({
 }) {
   const containerRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const highlightLayerRef = useRef(null);
+  const layersGroupRef = useRef(null);
 
-  // Sync selected zone highlights and pan map smoothly
+  // Cleanup map instance on unmount
   useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        layersGroupRef.current = null;
+      }
+    };
+  }, []);
 
-    if (highlightLayerRef.current) {
-      map.removeLayer(highlightLayerRef.current);
-      highlightLayerRef.current = null;
-    }
-
-    if (!selectedZoneId) return;
-
-    const selZone = zones.find((z) => z.id === selectedZoneId);
-    if (!selZone) return;
+  // Reactively initialize and render/redraw all layers and markers
+  useEffect(() => {
+    let active = true;
 
     import("leaflet").then((LModule) => {
+      if (!active) return;
       const Leaflet = LModule.default || LModule;
 
-      const highlightHtml = `
-        <div style="
-          width: 32px; height: 32px;
-          border-radius: 50%;
-          border: 2px solid #F59E0B;
-          box-sizing: border-box;
-          box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.4), 0 0 16px rgba(245, 158, 11, 0.6);
-          animation: highlightPulse 1.5s infinite ease-in-out;
-        "></div>
-        <style>
-          @keyframes highlightPulse {
-            0%, 100% { transform: scale(1); opacity: 0.9; }
-            50% { transform: scale(1.18); opacity: 0.5; }
+      let map = mapInstanceRef.current;
+      let layersGroup = layersGroupRef.current;
+
+      // 1. Create map if it doesn't exist
+      if (!map) {
+        if (!containerRef.current) return;
+
+        // Leaflet default icon fix
+        delete Leaflet.Icon.Default.prototype._getIconUrl;
+        Leaflet.Icon.Default.mergeOptions({
+          iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+          iconUrl:       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+          shadowUrl:     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        });
+
+        map = Leaflet.map(containerRef.current, {
+          center: [centerLat, centerLng],
+          zoom,
+          zoomControl: true,
+          attributionControl: true,
+          scrollWheelZoom: false,
+        });
+        mapInstanceRef.current = map;
+
+        // Invalidate size to ensure it gets the correct container dimensions
+        map.invalidateSize();
+        setTimeout(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.invalidateSize();
           }
-        </style>
-      `;
+        }, 250);
 
-      const highlightIcon = Leaflet.divIcon({
-        html: highlightHtml,
-        className: "",
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-      });
+        // CartoDB Dark Matter tiles
+        Leaflet.tileLayer(
+          "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+          {
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: "abcd",
+            maxZoom: 20,
+          }
+        ).addTo(map);
 
-      highlightLayerRef.current = Leaflet.marker([selZone.lat, selZone.lng], {
-        icon: highlightIcon,
-        interactive: false,
-      }).addTo(map);
+        // Create a feature group to hold dynamic markers and overlays
+        layersGroup = Leaflet.featureGroup().addTo(map);
+        layersGroupRef.current = layersGroup;
+      }
 
-      map.panTo([selZone.lat, selZone.lng], { animate: true });
-    });
-  }, [selectedZoneId, zones]);
+      // 2. Clear any previous dynamic layers
+      layersGroup.clearLayers();
 
-  useEffect(() => {
-    if (!containerRef.current || mapInstanceRef.current) return;
-
-    /* Dynamic import for Leaflet only */
-    import("leaflet").then((LModule) => {
-      // Guard against double init in StrictMode
-      if (mapInstanceRef.current) return;
-
-      const Leaflet = LModule.default || LModule;
-
-      /* Leaflet default icon fix */
-      delete Leaflet.Icon.Default.prototype._getIconUrl;
-      Leaflet.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        iconUrl:       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        shadowUrl:     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
-
-
-      /* Create map instance */
-      const map = Leaflet.map(containerRef.current, {
-        center: [centerLat, centerLng],
-        zoom,
-        zoomControl: true,
-        attributionControl: true,
-        scrollWheelZoom: false,
-      });
-      mapInstanceRef.current = map;
-
-      // Invalidate size to ensure it gets the correct container dimensions
-      map.invalidateSize();
-      setTimeout(() => {
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.invalidateSize();
-        }
-      }, 250);
-
-      /* CartoDB Dark Matter tiles */
-      Leaflet.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-          subdomains: "abcd",
-          maxZoom: 20,
-        }
-      ).addTo(map);
-
-      // Compute geographic bounds and expand them slightly (e.g. by 20% total, 10% on each side)
+      // Compute geographic bounds
       const bounds = map.getBounds();
       const southWest = bounds.getSouthWest();
       const northEast = bounds.getNorthEast();
@@ -244,32 +215,19 @@ export default function MapPanel({
       );
       const expandedBounds = Leaflet.latLngBounds(expandedSouthWest, expandedNorthEast);
 
-      // Define 6-10 hotspots matching mock zones and extra textures
+      // Define hotspots
       const rawHotspots = [
-        // Zone center hotspots matching mock data:
-        // Baner (moderate): lat: 18.5590, lng: 73.7868
         { lat: 18.5590, lng: 73.7868, intensity: 0.6, radiusFrac: 0.28 },
-        // Aundh (high): lat: 18.5584, lng: 73.8076
         { lat: 18.5584, lng: 73.8076, intensity: 0.8, radiusFrac: 0.30 },
-        // Kothrud (high): lat: 18.5074, lng: 73.8077
         { lat: 18.5074, lng: 73.8077, intensity: 0.8, radiusFrac: 0.32 },
-        // Karve Nagar (severe): lat: 18.4918, lng: 73.8225
         { lat: 18.4918, lng: 73.8225, intensity: 1.0, radiusFrac: 0.35 },
-        // Warje (moderate): lat: 18.4857, lng: 73.7922
         { lat: 18.4857, lng: 73.7922, intensity: 0.6, radiusFrac: 0.28 },
-        // Bavdhan (mild): lat: 18.5216, lng: 73.7663
         { lat: 18.5216, lng: 73.7663, intensity: 0.4, radiusFrac: 0.24 },
-
-        // Intermediary textured hotspots for continuous realism:
-        // Near Pashan Lake
         { lat: 18.5380, lng: 73.7950, intensity: 0.5, radiusFrac: 0.20 },
-        // Near Shivajinagar
         { lat: 18.5350, lng: 73.8250, intensity: 0.75, radiusFrac: 0.22 },
-        // Near Erandwane
         { lat: 18.5120, lng: 73.8250, intensity: 0.85, radiusFrac: 0.25 },
       ];
 
-      // Convert geo hotspots to canvas fractional coordinates of the expanded bounding box
       const expandedLatDiff = (expandedNorthEast.lat - expandedSouthWest.lat) || 0.01;
       const expandedLngDiff = (expandedNorthEast.lng - expandedSouthWest.lng) || 0.01;
 
@@ -284,16 +242,16 @@ export default function MapPanel({
         };
       });
 
-      // Generate the synthetic raster (1200x800 resolution)
+      // Generate the synthetic raster
       const dataUrl = generateHeatRasterDataURL(canvasHotspots, 1200, 800);
 
-      // Add full-coverage satellite land surface temperature raster overlay with 0.62 opacity
+      // Add raster overlay
       Leaflet.imageOverlay(dataUrl, expandedBounds, {
         opacity: 0.62,
         interactive: false,
-      }).addTo(map);
+      }).addTo(layersGroup);
 
-      /* Add 3-4 small premium dark labeled callout pills above the overlay */
+      // Callout pills
       const calloutZones = [
         { name: "Kothrud", lat: 18.5074, lng: 73.8077, temp: "38.2°C" },
         { name: "Karve Nagar", lat: 18.4918, lng: 73.8225, temp: "41.5°C" },
@@ -303,13 +261,27 @@ export default function MapPanel({
 
       calloutZones.forEach((cz) => {
         const matchingZone = zones.find((z) => z.name === cz.name);
+        const isSelected = matchingZone && matchingZone.id === selectedZoneId;
         const isFunded = matchingZone ? matchingZone.funded : false;
         const hasFundingField = matchingZone && matchingZone.funded !== undefined;
 
-        // Apply distinct outline styling to funded vs. unfunded zones
-        const borderColor = hasFundingField ? (isFunded ? "#0D9488" : "#E2E8F030") : "#475569";
+        // Apply distinct styling to selected vs funded vs default
+        let borderColor = "#475569";
+        let shadowStyle = "0 4px 6px rgba(0,0,0,0.5)";
+        let borderWidth = "1.5px";
+
+        if (isSelected) {
+          borderColor = "#F59E0B"; // Gold
+          borderWidth = "2px";
+          shadowStyle = "0 0 12px rgba(245, 158, 11, 0.9), 0 0 20px rgba(245, 158, 11, 0.5)";
+        } else if (hasFundingField) {
+          borderColor = isFunded ? "#0D9488" : "#E2E8F030";
+          if (isFunded) {
+            shadowStyle = "0 0 12px #0D9488";
+          }
+        }
+
         const labelText = hasFundingField ? (isFunded ? `${cz.name} (Funded)` : `${cz.name} (Unfunded)`) : cz.name;
-        const shadowColor = hasFundingField ? (isFunded ? "0 0 12px #0D9488" : "0 4px 6px rgba(0,0,0,0.5)") : "0 4px 6px rgba(0,0,0,0.5)";
 
         const html = `
           <div style="
@@ -317,21 +289,22 @@ export default function MapPanel({
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 90px;
-            height: 40px;
+            width: 95px;
+            height: 42px;
             pointer-events: none;
             font-family: inherit;
           ">
             <div style="
               background: rgba(15, 23, 42, 0.95);
-              border: 1.5px solid ${borderColor};
+              border: ${borderWidth} solid ${borderColor};
               border-radius: 4px;
               padding: 2px 6px;
-              box-shadow: ${shadowColor};
+              box-shadow: ${shadowStyle};
               text-align: center;
               white-space: nowrap;
+              transition: border 150ms ease, box-shadow 150ms ease;
             ">
-              <div style="color: #94A3B8; font-size: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.1;">${labelText}</div>
+              <div style="color: ${isSelected ? "#F59E0B" : "#94A3B8"}; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.1;">${labelText}</div>
               <div style="color: #F8FAFC; font-size: 10px; font-weight: 700; margin-top: 1px; line-height: 1.1;">${cz.temp}</div>
             </div>
             <div style="
@@ -347,11 +320,11 @@ export default function MapPanel({
         const icon = Leaflet.divIcon({
           html,
           className: "",
-          iconSize: [90, 40],
-          iconAnchor: [45, 39], // Centered at the arrow point
+          iconSize: [95, 42],
+          iconAnchor: [47.5, 41],
         });
 
-        const marker = Leaflet.marker([cz.lat, cz.lng], { icon, interactive: true }).addTo(map);
+        const marker = Leaflet.marker([cz.lat, cz.lng], { icon, interactive: true }).addTo(layersGroup);
         marker.on("click", () => {
           if (onZoneClick) {
             const matching = zones.find((z) => z.name === cz.name);
@@ -360,7 +333,7 @@ export default function MapPanel({
         });
       });
 
-      /* Zone center tooltip markers (invisible circles so hover still shows detailed tooltip labels) */
+      // Hover circle markers for all zones
       zones.forEach((z) => {
         const hasCallout = calloutZones.some((cz) => cz.name === z.name);
         
@@ -370,7 +343,7 @@ export default function MapPanel({
           fillColor: "transparent",
           fillOpacity: 0,
           interactive: true,
-        }).addTo(map);
+        }).addTo(layersGroup);
 
         if (!hasCallout) {
           marker.bindTooltip(
@@ -387,7 +360,45 @@ export default function MapPanel({
         });
       });
 
-      /* User location marker — pulsing teal dot rendered crisp on top */
+      // Pulsing highlight marker on map for selected zone
+      if (selectedZoneId) {
+        const selZone = zones.find((z) => z.id === selectedZoneId);
+        if (selZone) {
+          const highlightHtml = `
+            <div style="
+              width: 32px; height: 32px;
+              border-radius: 50%;
+              border: 2px solid #F59E0B;
+              box-sizing: border-box;
+              box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.4), 0 0 16px rgba(245, 158, 11, 0.6);
+              animation: highlightPulse 1.5s infinite ease-in-out;
+            "></div>
+            <style>
+              @keyframes highlightPulse {
+                0%, 100% { transform: scale(1); opacity: 0.9; }
+                50% { transform: scale(1.18); opacity: 0.5; }
+              }
+            </style>
+          `;
+
+          const highlightIcon = Leaflet.divIcon({
+            html: highlightHtml,
+            className: "",
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+          });
+
+          Leaflet.marker([selZone.lat, selZone.lng], {
+            icon: highlightIcon,
+            interactive: false,
+          }).addTo(layersGroup);
+
+          // Pan smoothly to selected zone
+          map.panTo([selZone.lat, selZone.lng], { animate: true });
+        }
+      }
+
+      // User location marker
       if (userLocation) {
         const pulseHtml = `
           <div style="
@@ -406,20 +417,15 @@ export default function MapPanel({
           iconAnchor: [10, 10],
         });
         Leaflet.marker([userLocation.lat, userLocation.lng], { icon })
-          .addTo(map)
+          .addTo(layersGroup)
           .bindTooltip("You are here", { permanent: false, direction: "top", offset: [0, -10] });
       }
     });
 
-    /* Cleanup function to remove map instance on unmount */
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
+      active = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [centerLat, centerLng, zoom, zones, selectedZoneId, userLocation, onZoneClick]);
 
   return (
     <div
@@ -429,8 +435,9 @@ export default function MapPanel({
         width: "100%",
         borderRadius: "0.75rem",
         overflow: "hidden",
-        border: "1px solid #334155",
-        backgroundColor: "#0F172A",
+        border: "none",
+        backgroundColor: "rgba(2, 6, 23, 1.0)",
+        boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.8), 0 4px 12px -5px rgba(0, 0, 0, 0.8)",
       }}
     />
   );

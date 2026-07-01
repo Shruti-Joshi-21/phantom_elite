@@ -8,6 +8,7 @@ export default function Slider({
   max = 100,
   step = 1,
   value,
+  displayValue,
   defaultValue,
   onChange,
   label,
@@ -35,9 +36,9 @@ export default function Slider({
           }}
         >
           <label htmlFor={sliderId}>{label}</label>
-          {value !== undefined && (
+          {(displayValue !== undefined || value !== undefined) && (
             <span style={{ color: "#818CF8", fontWeight: 600 }}>
-              {value}
+              {displayValue !== undefined ? displayValue : value}
               {unit}
             </span>
           )}

@@ -4,6 +4,7 @@ import MapPanel from "@/components/MapPanel";
 import RoleSwitcher from "@/components/RoleSwitcher";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export default function CorpHeadShell({ data }) {
   const { stats, zones, portfolio, equityPrioritization, tradeoffs } = data;
@@ -22,25 +23,25 @@ export default function CorpHeadShell({ data }) {
         
         {/* ── 1. HERO SUMMARY STATS (4 cards in a row) ──────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="flex flex-col gap-1.5" style={{ borderLeft: "3.5px solid #818CF8" }}>
+          <Card className="flex flex-col gap-1.5">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Allocated</span>
             <span className="text-xl md:text-2xl font-extrabold text-slate-100">{formatCurrency(stats.budgetAllocated)}</span>
             <span className="text-[10px] text-indigo-300 font-semibold bg-indigo-950/40 px-2 py-0.5 rounded self-start mt-0.5 border border-indigo-900/50">Cap Approved</span>
           </Card>
           
-          <Card className="flex flex-col gap-1.5" style={{ borderLeft: "3.5px solid #2DD4BF" }}>
+          <Card className="flex flex-col gap-1.5">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">City-wide Reduction</span>
             <span className="text-xl md:text-2xl font-extrabold text-teal-400">{stats.avgTempReduction.toFixed(1)}°C</span>
             <span className="text-[10px] text-teal-300 font-semibold bg-teal-950/40 px-2 py-0.5 rounded self-start mt-0.5 border border-teal-900/50">Model Yield</span>
           </Card>
 
-          <Card className="flex flex-col gap-1.5" style={{ borderLeft: "3.5px solid #94A3B8" }}>
+          <Card className="flex flex-col gap-1.5">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Coverage Wards</span>
             <span className="text-xl md:text-2xl font-extrabold text-slate-100">{stats.zonesCovered}</span>
             <span className="text-[10px] text-slate-300 font-semibold bg-slate-900 px-2 py-0.5 rounded self-start mt-0.5 border border-slate-700/50">Priority Focus</span>
           </Card>
 
-          <Card className="flex flex-col gap-1.5" style={{ borderLeft: "3.5px solid #FCD34D" }}>
+          <Card className="flex flex-col gap-1.5">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Equity Index</span>
             <span className="text-xl md:text-2xl font-extrabold text-amber-400">{stats.equityScore}</span>
             <span className="text-[10px] text-amber-300 font-semibold bg-amber-950/40 px-2 py-0.5 rounded self-start mt-0.5 border border-amber-900/50">Vulnerability Weight</span>
@@ -78,47 +79,96 @@ export default function CorpHeadShell({ data }) {
         </Card>
 
         {/* ── 3. PORTFOLIO & EQUITY PRIORITIZATION (Two cards row) ───── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* ── 3. PORTFOLIO & EQUITY PRIORITIZATION (Two columns) ───── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           
-          {/* Portfolio distribution card */}
-          <Card className="flex flex-col gap-4" style={{ padding: "1.5rem" }}>
-            <div>
-              <h3 className="text-base font-bold text-slate-100">Budget Allocation Portfolio</h3>
-              <p className="text-xs text-slate-400 mt-1">Multi-zone portfolio — diminishing returns modeled per zone to avoid over-concentration</p>
-            </div>
-
-            {/* Stacked allocation bar */}
-            <div className="space-y-4">
-              <div className="flex h-6 w-full rounded-md overflow-hidden bg-slate-900 border border-slate-800">
-                <div style={{ width: "45%", backgroundColor: "#0D9488" }} title="Cool Roofs (45%)" />
-                <div style={{ width: "30%", backgroundColor: "#0F766E" }} title="Urban Greening (30%)" />
-                <div style={{ width: "25%", backgroundColor: "#115E59" }} title="Reflective Pavement (25%)" />
+          {/* Left Column: Portfolio & Strategic Trade-offs */}
+          <div className="flex flex-col gap-6">
+            
+            {/* Portfolio distribution card */}
+            <Card className="flex flex-col gap-4" style={{ padding: "1.5rem" }}>
+              <div>
+                <h3 className="text-base font-bold text-slate-100">Budget Allocation Portfolio</h3>
+                <p className="text-xs text-slate-400 mt-1">Multi-zone portfolio — diminishing returns modeled per zone to avoid over-concentration</p>
               </div>
 
-              {/* Legend with numbers */}
-              <div className="divide-y divide-slate-800">
-                {portfolio.map((p, idx) => (
-                  <div key={idx} className="flex justify-between py-2.5 text-sm items-center">
-                    <div className="flex items-center gap-2">
-                      <span
-                        style={{
-                          width: "8px",
-                          height: "8px",
-                          borderRadius: "50%",
-                          backgroundColor: idx === 0 ? "#0D9488" : idx === 1 ? "#0F766E" : "#115E59",
-                        }}
-                      />
-                      <span className="text-slate-300 font-medium">{p.type}</span>
+              {/* Stacked allocation bar */}
+              <div className="space-y-4">
+                <div className="flex h-6 w-full rounded-md overflow-hidden bg-slate-900 border border-slate-800">
+                  <div style={{ width: "45%", backgroundColor: "#0D9488" }} title="Cool Roofs (45%)" />
+                  <div style={{ width: "30%", backgroundColor: "#0F766E" }} title="Urban Greening (30%)" />
+                  <div style={{ width: "25%", backgroundColor: "#115E59" }} title="Reflective Pavement (25%)" />
+                </div>
+
+                {/* Legend with numbers */}
+                <div className="divide-y divide-slate-800">
+                  {portfolio.map((p, idx) => (
+                    <div key={idx} className="flex justify-between py-2.5 text-sm items-center">
+                      <div className="flex items-center gap-2">
+                        <span
+                          style={{
+                            width: "8px",
+                            height: "8px",
+                            borderRadius: "50%",
+                            backgroundColor: idx === 0 ? "#0D9488" : idx === 1 ? "#0F766E" : "#115E59",
+                          }}
+                        />
+                        <span className="text-slate-300 font-medium">{p.type}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-slate-100 font-bold">{formatCurrency(p.amount)}</span>
+                        <span className="text-xs text-teal-400 font-semibold ml-2">({p.percentage}%)</span>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-slate-100 font-bold">{formatCurrency(p.amount)}</span>
-                      <span className="text-xs text-teal-400 font-semibold ml-2">({p.percentage}%)</span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+
+            {/* Strategic Trade-offs card */}
+            <Card className="flex flex-col gap-4" style={{ padding: "1.5rem" }}>
+              <div>
+                <h3 className="text-base font-bold text-slate-100">Strategic Trade-offs & Side-Effects</h3>
+                <p className="text-xs text-slate-400 mt-1">Aggregate macro secondary effects across the current funded cooling portfolio</p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {tradeoffs.map((t, idx) => {
+                  const isWarning = t.startsWith("⚠");
+                  const cleanText = t.replace(/^[⚠✔]\s*/, "");
+                  return (
+                    <div
+                      key={idx}
+                      className="p-3.5 rounded-lg flex flex-col justify-between border"
+                      style={{
+                        backgroundColor: isWarning ? "#2D1F00" : "#0D2E2B",
+                        borderColor: isWarning ? "#FCD34D30" : "#2DD4BF30",
+                      }}
+                    >
+                      <div style={{ display: "flex", gap: "0.625rem", alignItems: "flex-start" }}>
+                        {isWarning ? (
+                          <AlertTriangle size={16} style={{ color: "#FCD34D", flexShrink: 0, marginTop: "2px" }} />
+                        ) : (
+                          <CheckCircle2 size={16} style={{ color: "#2DD4BF", flexShrink: 0, marginTop: "2px" }} />
+                        )}
+                        <span
+                          style={{
+                            fontSize: "0.8125rem",
+                            fontWeight: 600,
+                            color: isWarning ? "#FCD34D" : "#2DD4BF",
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {cleanText}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+          </div>
 
           {/* Equity weighted Prioritization card */}
           <Card className="flex flex-col gap-4" style={{ padding: "1.5rem" }}>
@@ -153,42 +203,8 @@ export default function CorpHeadShell({ data }) {
               ))}
             </div>
           </Card>
+
         </div>
-
-        {/* ── 4. TRADE-OFFS AT A GLANCE ─────────────────────────────── */}
-        <Card className="flex flex-col gap-4" style={{ padding: "1.5rem" }}>
-          <div>
-            <h3 className="text-base font-bold text-slate-100">Strategic Trade-offs & Side-Effects</h3>
-            <p className="text-xs text-slate-400 mt-1">Aggregate macro secondary effects across the current funded cooling portfolio</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {tradeoffs.map((t, idx) => {
-              const isWarning = t.startsWith("⚠");
-              return (
-                <div
-                  key={idx}
-                  className="p-3.5 rounded-lg flex flex-col justify-between border"
-                  style={{
-                    backgroundColor: isWarning ? "#2D1F00" : "#0D2E2B",
-                    borderColor: isWarning ? "#FCD34D30" : "#2DD4BF30",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "0.8125rem",
-                      fontWeight: 600,
-                      color: isWarning ? "#FCD34D" : "#2DD4BF",
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {t}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
 
       </div>
     </div>

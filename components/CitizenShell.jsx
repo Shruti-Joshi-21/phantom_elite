@@ -2,6 +2,15 @@
 
 import MapPanel from "@/components/MapPanel";
 import RoleSwitcher from "@/components/RoleSwitcher";
+import { TreePine, Building2, Droplets, MapPin, Clock, Activity } from "lucide-react";
+
+const ICON_MAP = {
+  "🌳": <TreePine size={18} style={{ color: "#22C55E" }} />,
+  "🏗️": <Building2 size={18} style={{ color: "#94A3B8" }} />,
+  "💧": <Droplets size={18} style={{ color: "#3B82F6" }} />,
+  "🌿": <MapPin size={18} style={{ color: "#22C55E" }} />,
+  "🕗": <Clock size={18} style={{ color: "#FACC15" }} />,
+};
 
 /**
  * CitizenShell — Dark-themed Citizen Dashboard.
@@ -40,10 +49,10 @@ export default function CitizenShell({ data }) {
         {/* ── 1. HERO HEAT CARD ─────────────────────────────────────────── */}
         <div style={{
           borderRadius: "1.25rem",
-          border: `1.5px solid ${hc.dot}50`,
-          backgroundColor: "#0F172A",
+          border: "none",
+          backgroundColor: "rgba(2, 6, 23, 1.0)",
           padding: "2rem",
-          boxShadow: `0 4px 32px -4px ${hc.glow}`,
+          boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(255, 255, 255, 0.05), 0 4px 12px rgba(255, 255, 255, 0.02)",
           display: "flex",
           flexDirection: "column",
           gap: "1.25rem",
@@ -110,12 +119,13 @@ export default function CitizenShell({ data }) {
         {/* ── 2. WHY IS IT HOT HERE? ────────────────────────────────────── */}
         <div style={{
           borderRadius: "1.25rem",
-          border: "1px solid #1E293B",
-          backgroundColor: "#0F172A",
+          border: "none",
+          backgroundColor: "rgba(2, 6, 23, 1.0)",
           padding: "1.75rem",
           display: "flex",
           flexDirection: "column",
           gap: "1.25rem",
+          boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(255, 255, 255, 0.05), 0 4px 12px rgba(255, 255, 255, 0.02)",
         }}>
           <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#F1F5F9", letterSpacing: "-0.01em" }}>
             Why is it hot here?
@@ -129,12 +139,11 @@ export default function CitizenShell({ data }) {
               {diagnosis.map((d) => (
                 <div key={d.id} style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
                   <div style={{
-                    width: "36px", height: "36px", borderRadius: "0.625rem",
-                    backgroundColor: "#1E293B", border: "1px solid #334155",
+                    width: "24px", height: "24px",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "1rem", flexShrink: 0,
+                    flexShrink: 0,
                   }}>
-                    {d.icon}
+                    {ICON_MAP[d.icon] || <Activity size={18} style={{ color: "#94A3B8" }} />}
                   </div>
                   <span style={{ fontSize: "0.875rem", color: "#94A3B8", lineHeight: 1.6, paddingTop: "0.15rem" }}>
                     {d.reason}
@@ -179,21 +188,19 @@ export default function CitizenShell({ data }) {
             {recommendations.map((rec) => (
               <div key={rec.id} style={{
                 borderRadius: "1rem",
-                border: "1px solid #134E4A",
-                backgroundColor: "#022C22",
+                border: "none",
+                backgroundColor: "rgba(2, 6, 23, 1.0)",
                 padding: "1.125rem 1.25rem",
                 display: "flex", alignItems: "flex-start", gap: "1rem",
+                boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(255, 255, 255, 0.05), 0 4px 12px rgba(255, 255, 255, 0.02)",
               }}>
                 {/* Icon bubble */}
                 <div style={{
-                  width: "42px", height: "42px",
-                  borderRadius: "0.75rem",
-                  backgroundColor: "#0D2E2B",
-                  border: "1px solid #134E4A",
+                  width: "24px", height: "24px",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "1.1rem", flexShrink: 0,
+                  flexShrink: 0,
                 }}>
-                  {rec.icon}
+                  {ICON_MAP[rec.icon] || <Activity size={18} style={{ color: "#22C55E" }} />}
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>

@@ -1,67 +1,90 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import MapPanel from "@/components/MapPanel";
 import RoleSwitcher from "@/components/RoleSwitcher";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Slider from "@/components/ui/Slider";
+import { AlertTriangle, Check, Plus } from "lucide-react";
 
 /**
  * PlannerShell — Dark-themed City Planner Dashboard.
  * Includes interactive budget-aware intervention ranking, map selectors,
  * and SHAP driver diagnostic cards.
  */
-export default function PlannerShell({ data }) {
+export default function PlannerShell({
+  data,
+  selectedZoneId,
+  setSelectedZoneId,
+  selectedInterventionIds,
+  setSelectedInterventionIds,
+  planConfirmed,
+  setPlanConfirmed,
+  budget,
+  setBudget,
+}) {
   const { ward, zones, interventions } = data;
 
-  // State
-  const [selectedZoneId, setSelectedZoneId] = useState("z3"); // Default Kothrud
-  const [budget, setBudget] = useState(2000000); // Default ₹20 Lakhs
+  // Sync state: deselect interventions that exceed the current budget cap
+  useEffect(() => {
+    setSelectedInterventionIds((prev) =>
+      prev.filter((id) => {
+        const item = interventions.find((i) => i.id === id);
+        return item && item.cost <= budget;
+      })
+    );
+  }, [budget, interventions, setSelectedInterventionIds]);
 
   // Compute active diagnosed zone
   const activeZone = useMemo(() => {
-    return zones.find((z) => z.id === selectedZoneId) || zones[0];
+    return zones.find((z) => z.id === selectedZoneId) || null;
   }, [selectedZoneId, zones]);
 
-  // Greedy intervention optimizer:
-  // Sorts by efficiency (absolute temperature drop per Rupee spend),
-  // then allocates budget greedily.
-  const optimizationResults = useMemo(() => {
-    const sorted = [...interventions].sort((a, b) => {
+  // Filter & sort interventions by cost-efficiency (temperature drop per Rupee spent)
+  const sortedInterventions = useMemo(() => {
+    const affordable = interventions.filter((item) => item.cost <= budget);
+    return [...affordable].sort((a, b) => {
       const effA = Math.abs(a.tempReduction) / a.cost;
       const effB = Math.abs(b.tempReduction) / b.cost;
       return effB - effA; // Highest efficiency first
     });
-
-    let remainingBudget = budget;
-    const selected = [];
-    const unselected = [];
-
-    sorted.forEach((item) => {
-      if (item.cost <= remainingBudget) {
-        selected.push(item);
-        remainingBudget -= item.cost;
-      } else {
-        unselected.push(item);
-      }
-    });
-
-    const totalCostSpent = selected.reduce((sum, item) => sum + item.cost, 0);
-    const totalTempReduction = selected.reduce((sum, item) => sum + item.tempReduction, 0);
-
-    return {
-      selected,
-      unselected,
-      totalCostSpent,
-      totalTempReduction: Math.abs(totalTempReduction), // absolute degrees mitigated
-    };
   }, [budget, interventions]);
 
-  const { selected, unselected, totalCostSpent, totalTempReduction } = optimizationResults;
+  // Find locked interventions exceeding the budget
+  const lockedInterventions = useMemo(() => {
+    return interventions.filter((item) => item.cost > budget);
+  }, [budget, interventions]);
 
-  // Format currency helpers
+  // Compute summary stats from SELECTED interventions only
+  const activeSelected = useMemo(() => {
+    return sortedInterventions.filter((item) => selectedInterventionIds.includes(item.id));
+  }, [sortedInterventions, selectedInterventionIds]);
+
+  const totalCostSpent = useMemo(() => {
+    return activeSelected.reduce((sum, item) => sum + item.cost, 0);
+  }, [activeSelected]);
+
+  const totalTempReduction = useMemo(() => {
+    const sum = activeSelected.reduce((sum, item) => sum + item.tempReduction, 0);
+    return Math.abs(sum); // Absolute degree reduction
+  }, [activeSelected]);
+
+  const remainingBudget = budget - totalCostSpent;
+
+  // Toggle selection handler
+  const handleToggleIntervention = (id) => {
+    setSelectedInterventionIds((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((itemId) => itemId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+
+  // Format currency helper
   const formatCurrency = (val) => {
     return "₹" + val.toLocaleString("en-IN");
   };
@@ -101,7 +124,7 @@ export default function PlannerShell({ data }) {
                 centerLng={73.7937}
                 zoom={12.4}
                 zones={zones}
-                userLocation={{ lat: 18.5074, lng: 73.8077 }} // user location at Kothrud
+                userLocation={{ lat: 18.5074, lng: 73.8077 }} // User location at Kothrud
                 height="340px"
                 selectedZoneId={selectedZoneId}
                 onZoneClick={setSelectedZoneId}
@@ -109,39 +132,49 @@ export default function PlannerShell({ data }) {
             </Card>
 
             {/* Click-to-diagnose SHAP attributions */}
-            <Card style={{ borderLeft: "3.5px solid #F59E0B", padding: "1.25rem" }}>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-700 pb-3 mb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] uppercase tracking-wider text-amber-500 font-bold">Diagnosed Zone</span>
-                    <Badge variant="heat" heatLevel={activeZone.heatLevel}>
-                      {activeZone.heatLevel}
-                    </Badge>
+            {activeZone === null ? (
+              <Card style={{ borderLeft: "3.5px solid #64748B", padding: "2.5rem", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "180px", textAlign: "center" }}>
+                <span style={{ fontSize: "2.25rem", color: "#475569", marginBottom: "0.75rem" }}>📍</span>
+                <h4 style={{ margin: 0, fontSize: "0.9375rem", fontWeight: 700, color: "#F1F5F9" }}>No Zone Selected</h4>
+                <p style={{ margin: "4px 0 0 0", fontSize: "0.8125rem", color: "#64748B" }}>
+                  Click a zone on the map or list to see its heat drivers
+                </p>
+              </Card>
+            ) : (
+              <Card style={{ borderLeft: "3.5px solid #F59E0B", padding: "1.25rem" }}>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-700 pb-3 mb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] uppercase tracking-wider text-amber-500 font-bold">Diagnosed Zone</span>
+                      <Badge variant="heat" heatLevel={activeZone.heatLevel}>
+                        {activeZone.heatLevel}
+                      </Badge>
+                    </div>
+                    <h4 className="text-lg font-bold text-slate-100 mt-1">{activeZone.name}</h4>
                   </div>
-                  <h4 className="text-lg font-bold text-slate-100 mt-1">{activeZone.name}</h4>
+                  <div className="text-right sm:text-right flex sm:flex-col items-baseline sm:items-end gap-2 sm:gap-0">
+                    <span className="text-2xl font-extrabold text-slate-100">{activeZone.tempC}°C</span>
+                    <span className="text-[11px] text-slate-400">Feels Like: {activeZone.feelsLikeC}°C</span>
+                  </div>
                 </div>
-                <div className="text-right sm:text-right flex sm:flex-col items-baseline sm:items-end gap-2 sm:gap-0">
-                  <span className="text-2xl font-extrabold text-slate-100">{activeZone.tempC}°C</span>
-                  <span className="text-[11px] text-slate-400">Feels Like: {activeZone.feelsLikeC}°C</span>
-                </div>
-              </div>
 
-              <p className="text-xs text-slate-400 font-medium mb-3 uppercase tracking-wider">
-                Geospatial Driver Attributions (SHAP Attribution Score)
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {activeZone.drivers.map((drv, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 rounded-lg bg-slate-900 border border-slate-800 flex flex-col justify-between gap-1.5"
-                  >
-                    <span className="text-xs text-slate-300 font-medium leading-relaxed">{drv.split(" (")[0]}</span>
-                    <span className="text-xs font-bold text-amber-500">{drv.includes("SHAP:") ? drv.substring(drv.indexOf("SHAP:") + 5, drv.length - 1) : "+1.2°C"}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
+                <p className="text-xs text-slate-400 font-medium mb-3 uppercase tracking-wider">
+                  Geospatial Driver Attributions (SHAP Attribution Score)
+                </p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {activeZone.drivers.map((drv, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-lg bg-slate-900 border border-slate-800 flex flex-col justify-between gap-1.5"
+                    >
+                      <span className="text-xs text-slate-300 font-medium leading-relaxed">{drv.split(" (")[0]}</span>
+                      <span className="text-xs font-bold text-amber-500">{drv.includes("SHAP:") ? drv.substring(drv.indexOf("SHAP:") + 5, drv.length - 1) : "+1.2°C"}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
 
             {/* Compact Zone List Table */}
             <Card style={{ padding: "0" }}>
@@ -168,8 +201,9 @@ export default function PlannerShell({ data }) {
                           key={z.id}
                           style={{
                             borderBottom: "1px solid #1E293B",
-                            backgroundColor: isSelected ? "rgba(99, 102, 241, 0.05)" : "transparent",
-                            transition: "background-color 150ms",
+                            backgroundColor: isSelected ? "rgba(79, 70, 229, 0.12)" : "transparent",
+                            borderLeft: isSelected ? "4px solid #818CF8" : "4px solid transparent",
+                            transition: "background-color 150ms, border-left 150ms",
                           }}
                         >
                           <td style={{ padding: "0.875rem 1.25rem", fontWeight: 600, color: "#F1F5F9" }}>
@@ -232,7 +266,8 @@ export default function PlannerShell({ data }) {
                 min={0}
                 max={5000000}
                 step={50000}
-                value={formatCurrency(budget)}
+                value={budget}
+                displayValue={formatCurrency(budget)}
                 onChange={(e) => setBudget(Number(e.target.value))}
                 label="Ward Cap Limit"
               />
@@ -245,40 +280,57 @@ export default function PlannerShell({ data }) {
                   Recommended Interventions
                 </h3>
                 <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748B" }}>
-                  Optimized for thermal reduction yield per Rupee spent
+                  Select cards to include them in the heat mitigation blueprint
                 </p>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxHeight: "420px", overflowY: "auto", paddingRight: "4px" }}>
-                {selected.length === 0 ? (
-                  <div className="py-8 text-center text-slate-500 text-xs border border-dashed border-slate-800 rounded-xl">
+                {sortedInterventions.length === 0 ? (
+                  <div className="py-8 px-4 text-center text-slate-500 text-xs border border-dashed border-slate-800 rounded-xl">
                     No recommendations affordable at this budget cap limit.
                   </div>
                 ) : (
-                  selected.map((item, idx) => {
+                  sortedInterventions.map((item) => {
+                    const isSelected = selectedInterventionIds.includes(item.id);
                     const effRatio = (item.cost / Math.abs(item.tempReduction)).toFixed(0);
                     return (
                       <div
                         key={item.id}
+                        onClick={() => handleToggleIntervention(item.id)}
                         style={{
-                          border: "1px solid #134E4A",
-                          background: "#022C22",
+                          border: isSelected ? "2px solid #0D9488" : "none",
+                          background: isSelected ? "rgba(13, 148, 136, 0.08)" : "rgba(2, 6, 23, 1.0)",
                           borderRadius: "0.75rem",
                           padding: "0.875rem",
                           display: "flex",
                           flexDirection: "column",
                           gap: "0.5rem",
+                          cursor: "pointer",
+                          transition: "box-shadow 150ms ease, background-color 150ms ease, transform 100ms ease",
+                          boxShadow: isSelected ? "0 4px 12px rgba(13, 148, 136, 0.2)" : "0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(255, 255, 255, 0.05)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                          if (!isSelected) {
+                            e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(255, 255, 255, 0.08)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "translateY(0)";
+                          if (!isSelected) {
+                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(255, 255, 255, 0.05)";
+                          }
                         }}
                       >
                         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem" }}>
                           <div style={{ display: "flex", gap: "0.5rem" }}>
                             <div style={{
                               width: "20px", height: "20px", borderRadius: "50%",
-                              background: "#0D9488", color: "#F8FAFC",
+                              background: isSelected ? "#0D9488" : "#1E293B", color: "#F8FAFC",
                               display: "flex", alignItems: "center", justifyContent: "center",
-                              fontSize: "0.6875rem", fontWeight: 800, flexShrink: 0, marginTop: "2px"
+                              flexShrink: 0, marginTop: "2px"
                             }}>
-                              {idx + 1}
+                              {isSelected ? <Check size={10} strokeWidth={3} /> : <Plus size={10} strokeWidth={3} />}
                             </div>
                             <div>
                               <h4 style={{ margin: 0, fontSize: "0.8125rem", fontWeight: 700, color: "#E2E8F0" }}>
@@ -289,12 +341,17 @@ export default function PlannerShell({ data }) {
                               </p>
                             </div>
                           </div>
-                          <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#F8FAFC" }}>
-                            {formatCurrency(item.cost)}
-                          </span>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                            <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#F8FAFC" }}>
+                              {formatCurrency(item.cost)}
+                            </span>
+                            <span style={{ fontSize: "0.65rem", color: isSelected ? "#2DD4BF" : "#64748B", fontWeight: 600 }}>
+                              {isSelected ? "In Plan" : "Add to Plan"}
+                            </span>
+                          </div>
                         </div>
 
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #115E59", paddingTop: "0.375rem", fontSize: "0.75rem" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #1E293B", paddingTop: "0.375rem", fontSize: "0.75rem" }}>
                           <span style={{ color: "#2DD4BF", fontWeight: 600 }}>
                             Projected Yield: {item.tempReduction.toFixed(1)}°C
                           </span>
@@ -305,8 +362,9 @@ export default function PlannerShell({ data }) {
 
                         {item.tradeoff && (
                           <div style={{ marginTop: "0.25rem" }}>
-                            <Badge variant="tradeoff" style={{ fontSize: "0.6875rem", padding: "0.15rem 0.5rem" }}>
-                              {item.tradeoff}
+                            <Badge variant="tradeoff" style={{ fontSize: "0.6875rem", padding: "0.15rem 0.5rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                              <AlertTriangle size={10} style={{ color: "#FCD34D" }} />
+                              {item.tradeoff.replace(/^[⚠✔]\s*/, "")}
                             </Badge>
                           </div>
                         )}
@@ -316,19 +374,20 @@ export default function PlannerShell({ data }) {
                 )}
 
                 {/* Exceeds budget section */}
-                {unselected.length > 0 && (
+                {lockedInterventions.length > 0 && (
                   <div style={{ marginTop: "0.5rem" }}>
                     <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.75rem", fontWeight: 700, color: "#475569", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                      Locked — Exceeds Budget ({unselected.length})
+                      Locked — Exceeds Budget ({lockedInterventions.length})
                     </h4>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", opacity: 0.45 }}>
-                      {unselected.map((item) => (
+                      {lockedInterventions.map((item) => (
                         <div
                           key={item.id}
                           style={{
-                            border: "1px solid #334155",
-                            background: "#0F172A",
+                            border: "none",
+                            background: "rgba(2, 6, 23, 1.0)",
                             borderRadius: "0.75rem",
+                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(255, 255, 255, 0.05)",
                             padding: "0.75rem",
                             display: "flex",
                             justifyContent: "space-between",
@@ -350,12 +409,12 @@ export default function PlannerShell({ data }) {
             </Card>
 
             {/* Live Summary Strip Card */}
-            <Card style={{ padding: "1rem", background: "linear-gradient(to right, #1E1B4B, #0F172A)", border: "1px solid #4F46E535" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <Card style={{ padding: "1.25rem", background: "rgba(2, 6, 23, 1.0)", border: "none" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: "0.75rem", color: "#A5B4FC" }}>Active Allocations:</span>
                   <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "#F8FAFC" }}>
-                    {selected.length} Selected
+                    {activeSelected.length} Selected
                   </span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -365,17 +424,142 @@ export default function PlannerShell({ data }) {
                   </span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.75rem", color: "#A5B4FC" }}>Budget Remaining:</span>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 700, color: remainingBudget >= 0 ? "#86EFAC" : "#FCA5A5" }}>
+                    {formatCurrency(remainingBudget)}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(79, 70, 229, 0.2)", paddingTop: "0.5rem" }}>
                   <span style={{ fontSize: "0.75rem", color: "#A5B4FC" }}>Projected Heat Mitigation:</span>
-                  <span style={{ fontSize: "1rem", fontWeight: 800, color: "#2DD4BF" }}>
+                  <span style={{ fontSize: "1.125rem", fontWeight: 800, color: "#2DD4BF" }}>
                     -{totalTempReduction.toFixed(1)}°C
                   </span>
                 </div>
+
+                <Button
+                  variant="primary"
+                  disabled={activeSelected.length === 0}
+                  onClick={() => setPlanConfirmed(true)}
+                  style={{ width: "100%", marginTop: "0.5rem" }}
+                >
+                  Confirm Plan
+                </Button>
               </div>
             </Card>
 
           </div>
         </div>
       </div>
+
+      {/* ── PLAN CONFIRMATION MODAL OVERLAY ────────────────────────────── */}
+      {planConfirmed && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(2, 6, 23, 0.8)",
+          backdropFilter: "blur(12px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+          padding: "1rem",
+        }}>
+          <div style={{
+            background: "rgba(2, 6, 23, 1.0)",
+            border: "none",
+            borderRadius: "1rem",
+            width: "100%",
+            maxWidth: "520px",
+            padding: "2rem",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 32px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem",
+          }}>
+            {/* Header / Success Icon */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", textAlign: "center" }}>
+              <div style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "50%",
+                background: "rgba(16, 185, 129, 0.08)",
+                border: "2px solid #10B981",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#10B981",
+                marginBottom: "0.5rem",
+                boxShadow: "0 0 16px rgba(16, 185, 129, 0.2)",
+              }}>
+                <Check size={28} strokeWidth={3} />
+              </div>
+              <h2 style={{ fontSize: "1.375rem", fontWeight: 800, color: "#F8FAFC", margin: 0 }}>Plan Confirmed</h2>
+              <p style={{ fontSize: "0.8125rem", color: "#64748B", margin: 0 }}>
+                Your heat mitigation blueprint is locked and ready for deployment.
+              </p>
+            </div>
+
+            {/* List of Selected Interventions */}
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.75rem",
+              maxHeight: "180px",
+              overflowY: "auto",
+              borderTop: "1px solid #1e293b",
+              borderBottom: "1px solid #1e293b",
+              padding: "1rem 0",
+            }}>
+              {activeSelected.map((item) => (
+                <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8125rem" }}>
+                  <div>
+                    <div style={{ fontWeight: 700, color: "#E2E8F0" }}>{item.type}</div>
+                    <div style={{ fontSize: "0.75rem", color: "#64748B" }}>Zone: {item.zoneName}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontWeight: 700, color: "#F8FAFC" }}>{formatCurrency(item.cost)}</div>
+                    <div style={{ fontSize: "0.75rem", color: "#2DD4BF" }}>{item.tempReduction.toFixed(1)}°C Reduction</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Summary Statistics */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8125rem" }}>
+                <span style={{ color: "#94A3B8" }}>Total Interventions Selected:</span>
+                <span style={{ fontWeight: 700, color: "#F8FAFC" }}>{activeSelected.length}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8125rem" }}>
+                <span style={{ color: "#94A3B8" }}>Committed Budget Spend:</span>
+                <span style={{ fontWeight: 700, color: "#F8FAFC" }}>{formatCurrency(totalCostSpent)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8125rem" }}>
+                <span style={{ color: "#94A3B8" }}>Remaining Ward Cap Limit:</span>
+                <span style={{ fontWeight: 700, color: "#86EFAC" }}>{formatCurrency(remainingBudget)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", borderTop: "1px solid #1e293b", paddingTop: "0.75rem" }}>
+                <span style={{ color: "#A5B4FC", fontWeight: 600 }}>Projected Area mitigation:</span>
+                <span style={{ fontWeight: 800, color: "#2DD4BF", fontSize: "1.125rem" }}>-{totalTempReduction.toFixed(1)}°C</span>
+              </div>
+            </div>
+
+            {/* Edit / Go Back Button */}
+            <div style={{ marginTop: "0.5rem" }}>
+              <Button
+                variant="secondary"
+                onClick={() => setPlanConfirmed(false)}
+                style={{ width: "100%" }}
+              >
+                Edit Plan
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

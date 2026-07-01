@@ -40,9 +40,9 @@ const ROLES = [
     href: "/citizen",
     label: "Citizen",
     description: "See your local heat exposure and what you can do",
-    accent: "#0D9488",
-    accentBg: "#0D2E2B",
-    borderBase: "#134E4A",
+    accent: "#94A3B8",
+    accentBg: "#1E293B",
+    borderBase: "#334155",
     icon: CitizenIcon,
   },
   {
@@ -50,9 +50,9 @@ const ROLES = [
     href: "/planner",
     label: "City Planner",
     description: "Simulate cooling interventions and allocate budget across zones",
-    accent: "#6366F1",
-    accentBg: "#1E1B4B",
-    borderBase: "#312E81",
+    accent: "#94A3B8",
+    accentBg: "#1E293B",
+    borderBase: "#334155",
     icon: PlannerIcon,
   },
   {
@@ -84,36 +84,28 @@ export default function RoleCards() {
                 position: "relative",
                 height: "100%",
                 borderRadius: "1.25rem",
-                border: `1.5px solid ${role.borderBase}`,
-                backgroundColor: "rgba(15, 23, 42, 0.9)",
+                border: "none",
+                backgroundColor: "rgba(2, 6, 23, 1.0)",
                 padding: "2rem 1.75rem",
                 display: "flex",
                 flexDirection: "column",
+                alignItems: "center",
                 gap: "1.25rem",
                 cursor: "pointer",
-                transition: "box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease, background-color 200ms ease",
-                boxShadow: "0 1px 4px 0 rgb(0 0 0 / 0.4)",
+                transition: "box-shadow 250ms ease, transform 250ms ease, background-color 250ms ease",
+                boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(255, 255, 255, 0.05), 0 4px 12px rgba(255, 255, 255, 0.02)",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = `0 8px 32px -4px ${role.accent}35`;
+                e.currentTarget.style.boxShadow = "0 20px 40px -10px rgba(0, 0, 0, 0.9), 0 0 24px 2px rgba(148, 163, 184, 0.15), 0 1px 5px rgba(255, 255, 255, 0.08)";
                 e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.borderColor = role.accent;
-                e.currentTarget.style.backgroundColor = "rgba(17, 24, 39, 0.9)";
+                e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 1.0)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = "0 1px 4px 0 rgb(0 0 0 / 0.4)";
+                e.currentTarget.style.boxShadow = "0 10px 30px -5px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(255, 255, 255, 0.05), 0 4px 12px rgba(255, 255, 255, 0.02)";
                 e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.borderColor = role.borderBase;
-                e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.9)";
+                e.currentTarget.style.backgroundColor = "rgba(2, 6, 23, 1.0)";
               }}
             >
-              {/* Accent top strip */}
-              <div style={{
-                position: "absolute", top: 0, left: "1.5rem", right: "1.5rem",
-                height: "2px", borderRadius: "0 0 4px 4px",
-                backgroundColor: role.accent, opacity: 0.9,
-              }} />
-
               {/* Icon bubble */}
               <div style={{
                 width: "56px", height: "56px", borderRadius: "0.875rem",
@@ -125,7 +117,7 @@ export default function RoleCards() {
               </div>
 
               {/* Text */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", textAlign: "center" }}>
                 <h2 style={{
                   margin: 0, fontSize: "1.125rem", fontWeight: 700,
                   color: "#F1F5F9", letterSpacing: "-0.02em",
@@ -140,10 +132,11 @@ export default function RoleCards() {
               {/* Arrow cue */}
               <div style={{
                 marginTop: "auto", display: "flex", alignItems: "center",
-                gap: "0.375rem", fontSize: "0.8125rem", fontWeight: 600, color: role.accent,
+                justifyContent: "center",
+                gap: "0.375rem", fontSize: "0.8125rem", fontWeight: 600, color: "#0D9488",
               }}>
                 Enter view
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={role.accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
               </div>

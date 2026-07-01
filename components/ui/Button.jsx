@@ -10,22 +10,22 @@
 const VARIANT_STYLES = {
   primary: {
     base: {
-      backgroundColor: "#4F46E5",
+      backgroundColor: "#0D9488",
       color: "#ffffff",
       border: "1px solid transparent",
     },
     hover: {
-      backgroundColor: "#4338CA",
+      backgroundColor: "#0F766E",
     },
   },
   secondary: {
     base: {
       backgroundColor: "transparent",
-      color: "#818CF8",
-      border: "1px solid #4F46E5",
+      color: "#2DD4BF",
+      border: "1px solid #0D9488",
     },
     hover: {
-      backgroundColor: "#1E1B4B",
+      backgroundColor: "rgba(13, 148, 136, 0.15)",
     },
   },
   ghost: {

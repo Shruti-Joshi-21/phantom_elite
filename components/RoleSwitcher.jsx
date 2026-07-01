@@ -4,24 +4,39 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 /**
- * RoleSwitcher — Shared navigation sub-header component.
- * Allows quick transitions between the three roles (Citizen, Planner, Corporation Head)
- * showing color-coordinated active indicator states.
+ * RoleSwitcher — Shared navigation header component for dashboard views.
+ * Acts as the main sticky header on dashboard screens.
  */
 export default function RoleSwitcher({ currentRole, locationLabel }) {
   const router = useRouter();
 
   const roles = [
-    { id: "citizen", label: "Citizen", path: "/citizen", activeColor: "#2DD4BF", activeBg: "#0D2E2B", dotColor: "#0D9488" },
-    { id: "planner", label: "Planner", path: "/planner", activeColor: "#818CF8", activeBg: "#1E1B4B", dotColor: "#6366F1" },
-    { id: "corp-head", label: "Corp Head", path: "/corp-head", activeColor: "#94A3B8", activeBg: "#1E293B", dotColor: "#475569" },
+    { id: "citizen", label: "Citizen View", path: "/citizen", activeColor: "#2DD4BF", activeBg: "#0D2E2B", dotColor: "#0D9488" },
+    { id: "planner", label: "Planner View", path: "/planner", activeColor: "#818CF8", activeBg: "#1E1B4B", dotColor: "#6366F1" },
+    { id: "corp-head", label: "Corp View", path: "/corp-head", activeColor: "#FCD34D", activeBg: "#1E293B", dotColor: "#F59E0B" },
   ];
 
   const activeRoleConfig = roles.find((r) => r.id === currentRole) || roles[0];
 
   return (
-    <div style={{ borderBottom: "1px solid #1E293B", backgroundColor: "#0F172A" }}>
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-3 flex items-center justify-between gap-4 flex-wrap">
+    <div
+      style={{
+        borderBottom: "1px solid #1E293B",
+        backgroundColor: "rgba(2, 6, 23, 0.9)",
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        backdropFilter: "blur(12px)",
+        height: "56px",
+        display: "flex",
+        alignItems: "center",
+        width: "100%",
+      }}
+    >
+      <div
+        className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between gap-4 flex-wrap"
+        style={{ width: "100%" }}
+      >
         
         {/* Left: Back Link */}
         <Link
@@ -45,11 +60,11 @@ export default function RoleSwitcher({ currentRole, locationLabel }) {
           All views
         </Link>
 
-        {/* Center: Static Role Badge */}
+        {/* Center: Static Role Badge in Primary Color */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: activeRoleConfig.dotColor, display: "inline-block", boxShadow: `0 0 0 3px ${activeRoleConfig.dotColor}30` }} />
           <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: activeRoleConfig.activeColor, letterSpacing: "0.02em" }}>
-            {activeRoleConfig.label} View
+            {activeRoleConfig.label}
           </span>
         </div>
 
