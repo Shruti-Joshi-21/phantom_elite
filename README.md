@@ -12,6 +12,7 @@ Develop a geospatial AI/ML-based system, backed with physics-informed decision m
 From raw satellite imagery to a role-adaptive decision tool: one pipeline, three stakeholder views, physically grounded recommendations.
 
 
+
 🚀**Key USPs**
 
 **1. Budget-Calibrated Intervention Optimizer**
@@ -35,11 +36,13 @@ Citizen — personal heat exposure + live air temperature + action tips
 Each intervention flagged with known secondary effects from urban-climatology literature (e.g., humidity rise from added vegetation, reflected heat from cool roofs) — because naive single-metric optimization is insufficient for responsible planning.
 
 
+
 **🏗️ System Architecture**
 
 ![System Architecture](image.png)
 
 Layers:
+
 **Data Ingestion** — Landsat-8 (LST), ECOSTRESS (LST), Sentinel-2 (LULC), ERA5 + CPCB (met/validation), GHSL (building morphology), Phone GPS + Weather API (live air temp)
 
 **Preprocessing** — Cloud-mask filtering, raster alignment, NDVI/albedo/building-density extraction
@@ -53,6 +56,7 @@ Layers:
 **Optimization** — Budget ranking, equity weighting, spatial spillover adjustment, trade-off flagging
 
 **Delivery** — FastAPI + React, role-scoped views
+
 
 
 🛠️**Tech Stack**
@@ -70,6 +74,7 @@ Layers:
 | **Deployment** | Docker |
 
 
+
 📊**Data Sources**
 
 | Dataset | Source | Used For |
@@ -80,8 +85,11 @@ Layers:
 | **Building Morphology** | GHSL | Downscaling and driver attribution |
 | **Live Air Temperature** | Phone GPS + Weather API | Citizen real-time view |
 
+
+
 🔬**Technical Methodology**
 ![Technical Methodology](image-2.png)
+
 **Downscaling**
 Coarse satellite LST (30–70m) sharpened to street-level using RF/XGBoost trained on NDVI, LULC, and GHSL building density.
 
@@ -98,6 +106,7 @@ Optimizer accounts for the cooling radius of each intervention to avoid recommen
 Model predictions checked against CPCB ground-station temperature readings with transparent error reporting per zone.
 
 
+
 👥**Stakeholder Roles**
 
 **Corporation Head**
@@ -108,6 +117,7 @@ Full diagnostic view. Hotspot map, per-zone driver breakdown ("hot because 40% c
 
 **Citizen**
 Auto-located personal heat exposure. Live air temperature alongside satellite-derived surface heat. Trade-off-aware personal cooling tips.
+
 
 
 🔭**Future Scope**
