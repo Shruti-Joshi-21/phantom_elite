@@ -41,11 +41,17 @@ Each intervention flagged with known secondary effects from urban-climatology li
 
 Layers:
 **Data Ingestion** — Landsat-8 (LST), ECOSTRESS (LST), Sentinel-2 (LULC), ERA5 + CPCB (met/validation), GHSL (building morphology), Phone GPS + Weather API (live air temp)
+
 **Preprocessing** — Cloud-mask filtering, raster alignment, NDVI/albedo/building-density extraction
+
 **Downscaling** — RF/XGBoost sharpens 30–70m LST to street-level resolution
+
 **Physics-Constrained Modeling** — Scenario simulation regularized by heat-transfer physics; tree-canopy and open-grass cooling modeled as separate coefficients
+
 **Explainability** — SHAP, typology-segmented per urban zone type; output auto-converted to plain-language explanations
+
 **Optimization** — Budget ranking, equity weighting, spatial spillover adjustment, trade-off flagging
+
 **Delivery** — FastAPI + React, role-scoped views
 
 
@@ -64,7 +70,7 @@ Layers:
 | **Deployment** | Docker |
 
 
-📊 Data Sources
+📊**Data Sources**
 
 | Dataset | Source | Used For |
 |---------|--------|----------|
@@ -74,7 +80,7 @@ Layers:
 | **Building Morphology** | GHSL | Downscaling and driver attribution |
 | **Live Air Temperature** | Phone GPS + Weather API | Citizen real-time view |
 
-🔬 Technical Methodology
+🔬**Technical Methodology**
 ![Technical Methodology](image-2.png)
 **Downscaling**
 Coarse satellite LST (30–70m) sharpened to street-level using RF/XGBoost trained on NDVI, LULC, and GHSL building density.
@@ -108,9 +114,13 @@ Auto-located personal heat exposure. Live air temperature alongside satellite-de
 
 
 **Heat Growth Trajectory Forecasting** — project ward-level heat stress to 2030 under business-as-usual
+
 **Closed-Loop Post-Implementation Verification** — validate predicted cooling against the next satellite pass after an intervention is built
+
 **Preventive Development Screening** — predict heat contribution of proposed new construction before approval
+
 **Hyperlocal Sensor Layer** — low-cost IoT ground sensors for true real-time street-level readings
+
 **Causal Second-Order Effects Engine** — move from rules-based trade-off flags to full causal inference (do-calculus) quantifying second-order intervention effects
 
 
